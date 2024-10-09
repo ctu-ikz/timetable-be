@@ -22,8 +22,8 @@ type User struct {
 
 type Semester struct {
 	ID       int    `json:"id"`
-	Year     int    `json:"year"`
-	Type     bool   `json:"type"`
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
 	Codename string `json:"codename"`
 }
 
@@ -85,16 +85,8 @@ func getSemester(w http.ResponseWriter, r *http.Request) {
 
 func getDbSemester(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
-	year := currentTime.Year()
 
-	var subYear int
-	if currentTime.Month() > 8 {
-		subYear = 1
-	} else {
-		subYear = 2
-	}
-
-	semester, err := dbSemester(db, year, subYear)
+	semester, err := dbSemester(db, currentTime)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -103,12 +95,13 @@ func getDbSemester(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(semester)
 }
 
-func dbSemester(db *sql.DB, year int, subyear int) (*Semester, error) {
+func dbSemester(db *sql.DB, time time.Time) (*Semester, error) {
 	fmt.Println("DB semester requested")
-	isWinter := subyear == 1
-	var semester Semester
 
-	err := db.QueryRow(`SELECT id, year, type, codename FROM "Semester" WHERE year = $1 AND type = $2`, year, isWinter).Scan(&semester.ID, &semester.Year, &semester.Type, &semester.Codename)
+	timeString := time.Format("2006-01-02")
+
+	var semester Semester
+	err := db.QueryRow(`SELECT id,start,"end",codename FROM "Semester" WHERE $1 BETWEEN "start" AND "end";`, timeString).Scan(&semester.ID, &semester.Start, &semester.End, &semester.Codename)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -116,7 +109,6 @@ func dbSemester(db *sql.DB, year int, subyear int) (*Semester, error) {
 		}
 		return nil, err
 	}
-	fmt.Print(semester)
 
 	return &semester, nil
 }
