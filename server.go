@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/ctu-ikz/timetable-be/db"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -22,42 +21,23 @@ type User struct {
 
 type Semester struct {
 	ID       int    `json:"id"`
-	Year     int    `json:"year"`
-	Type     bool   `json:"type"`
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
 	Codename string `json:"codename"`
 }
 
-var db *sql.DB
+var database *sql.DB
 
 func main() {
-	// Load environment variables from .env file
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
-	// Load connection string components from environment variables
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	dbHost := os.Getenv("DB_HOST")
-	dbSSLMode := os.Getenv("DB_SSLMODE")
+	var err error
 
-	connStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s sslmode=%s",
-		dbUser, dbPassword, dbName, dbHost, dbSSLMode)
+	database, err = db.ConnectToDB()
 
-	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Database connected")
+	defer database.Close()	
 
 	router := mux.NewRouter()
 	router.HandleFunc("/semester", getSemester).Methods("GET")
@@ -85,16 +65,8 @@ func getSemester(w http.ResponseWriter, r *http.Request) {
 
 func getDbSemester(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
-	year := currentTime.Year()
 
-	var subYear int
-	if currentTime.Month() > 8 {
-		subYear = 1
-	} else {
-		subYear = 2
-	}
-
-	semester, err := dbSemester(db, year, subYear)
+	semester, err := dbSemester(database, currentTime)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -103,12 +75,13 @@ func getDbSemester(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(semester)
 }
 
-func dbSemester(db *sql.DB, year int, subyear int) (*Semester, error) {
+func dbSemester(db *sql.DB, time time.Time) (*Semester, error) {
 	fmt.Println("DB semester requested")
-	isWinter := subyear == 1
-	var semester Semester
 
-	err := db.QueryRow(`SELECT id, year, type, codename FROM "Semester" WHERE year = $1 AND type = $2`, year, isWinter).Scan(&semester.ID, &semester.Year, &semester.Type, &semester.Codename)
+	timeString := time.Format("2006-01-02")
+
+	var semester Semester
+	err := db.QueryRow(`SELECT id,start,"end",codename FROM "Semester" WHERE $1 BETWEEN "start" AND "end";`, timeString).Scan(&semester.ID, &semester.Start, &semester.End, &semester.Codename)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -116,7 +89,6 @@ func dbSemester(db *sql.DB, year int, subyear int) (*Semester, error) {
 		}
 		return nil, err
 	}
-	fmt.Print(semester)
 
 	return &semester, nil
 }
