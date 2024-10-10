@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/ctu-ikz/timetable-be/db"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -27,37 +26,18 @@ type Semester struct {
 	Codename string `json:"codename"`
 }
 
-var db *sql.DB
+var database *sql.DB
 
 func main() {
-	// Load environment variables from .env file
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
-	// Load connection string components from environment variables
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	dbHost := os.Getenv("DB_HOST")
-	dbSSLMode := os.Getenv("DB_SSLMODE")
+	var err error
 
-	connStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s sslmode=%s",
-		dbUser, dbPassword, dbName, dbHost, dbSSLMode)
+	database, err = db.ConnectToDB()
 
-	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Database connected")
+	defer database.Close()	
 
 	router := mux.NewRouter()
 	router.HandleFunc("/semester", getSemester).Methods("GET")
@@ -86,7 +66,7 @@ func getSemester(w http.ResponseWriter, r *http.Request) {
 func getDbSemester(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 
-	semester, err := dbSemester(db, currentTime)
+	semester, err := dbSemester(database, currentTime)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
