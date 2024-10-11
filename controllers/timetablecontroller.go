@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	semesterCache      *SemesterCache
+	semesterCache      *models.SemesterCache
 	semesterCacheMutex sync.RWMutex
 )
 
@@ -20,8 +20,8 @@ type TimetableCache struct {
 	mutex sync.RWMutex
 }
 
-var timetableCache = TimetableCache{
-	data: make(map[string]models.WeeklyTimetable),
+var timetableCache = models.TimetableCache{
+	Data: make(map[string]models.WeeklyTimetable),
 }
 
 func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
@@ -38,13 +38,13 @@ func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
 		semester := semesterCache.Semester
 		semesterCacheMutex.RUnlock()
 
-		timetableCache.mutex.RLock()
-		if timetable, found := timetableCache.data[classID]; found {
-			timetableCache.mutex.RUnlock()
+		timetableCache.Mutex.RLock()
+		if timetable, found := timetableCache.Data[classID]; found {
+			timetableCache.Mutex.RUnlock()
 			json.NewEncoder(w).Encode(timetable)
 			return
 		}
-		timetableCache.mutex.RUnlock()
+		timetableCache.Mutex.RUnlock()
 
 		weeksSinceStart := int(curTime.Sub(semester.Start).Hours()/(24*7)) + 1
 		timetable, err := db.GetThisWeekTimetable(curTime, classID, weeksSinceStart, semester.ID)
@@ -53,9 +53,9 @@ func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		timetableCache.mutex.Lock()
-		timetableCache.data[classID] = *timetable
-		timetableCache.mutex.Unlock()
+		timetableCache.Mutex.Lock()
+		timetableCache.Data[classID] = *timetable
+		timetableCache.Mutex.Unlock()
 
 		json.NewEncoder(w).Encode(timetable)
 		return
@@ -73,7 +73,7 @@ func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	semesterCacheMutex.Lock()
-	semesterCache = &SemesterCache{
+	semesterCache = &models.SemesterCache{
 		Semester: semester,
 		Start:    semester.Start,
 		End:      semester.End,
@@ -87,9 +87,9 @@ func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	timetableCache.mutex.Lock()
-	timetableCache.data[classID] = *timetable
-	timetableCache.mutex.Unlock()
+	timetableCache.Mutex.Lock()
+	timetableCache.Data[classID] = *timetable
+	timetableCache.Mutex.Unlock()
 
 	json.NewEncoder(w).Encode(timetable)
 }
