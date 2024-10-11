@@ -42,7 +42,14 @@ func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
 		timetableCache.Mutex.RUnlock()
 
 		weeksSinceStart := int(curTime.Sub(semester.Start).Hours()/(24*7)) + 1
-		timetable, err := db.GetThisWeekTimetable(curTime, classID, weeksSinceStart, semester.ID)
+		var semesterID int
+		if semester.ID != nil {
+			semesterID = *semester.ID
+		} else {
+			http.Error(w, "Semester ID is nil", http.StatusInternalServerError)
+			return
+		}
+		timetable, err := db.GetThisWeekTimetable(curTime, classID, weeksSinceStart, semesterID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -76,7 +83,11 @@ func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
 	semesterCacheMutex.Unlock()
 
 	weeksSinceStart := int(curTime.Sub(semester.Start).Hours()/(24*7)) + 1
-	timetable, err := db.GetThisWeekTimetable(curTime, classID, weeksSinceStart, semester.ID)
+	semesterID := 0
+	if semester.ID != nil {
+		semesterID = *semester.ID
+	}
+	timetable, err := db.GetThisWeekTimetable(curTime, classID, weeksSinceStart, semesterID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

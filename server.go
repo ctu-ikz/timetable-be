@@ -32,7 +32,12 @@ func main() {
 	}
 
 	router := mux.NewRouter()
-	router.HandleFunc("/semester", controllers.GetDbSemester).Methods("GET")
+	router.HandleFunc("/semester", controllers.GetSemester).Methods("GET")
+	router.HandleFunc("/semester", controllers.PostSemester).Methods("POST")
+	router.HandleFunc("/semester/{id}", controllers.DeleteSemester).Methods("DELETE")
+	router.HandleFunc("/semester/{id}", controllers.PutSemester).Methods("PUT")
+	router.HandleFunc("/semester/{id}", controllers.GetSemesterByID).Methods("GET")
+
 	router.HandleFunc("/timetable", controllers.GetThisWeekTimetable).Methods("GET")
 
 	fmt.Println("Server up and running")

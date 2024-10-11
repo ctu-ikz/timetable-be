@@ -1,5 +1,5 @@
 CREATE TABLE "Semester" (
-    "id" smallserial   NOT NULL,
+    "id" serial   NOT NULL,
     "codename" char(4)   NOT NULL,
     "start" date NOT NULL,
     "end" date NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE "Semester" (
 );
 
 CREATE TABLE "Field" (
-    "id" smallserial   NOT NULL,
+    "id" serial   NOT NULL,
     "name" varchar(64)   NOT NULL,
     "shortcut" char(4) not null,
     CONSTRAINT "pk_Field" PRIMARY KEY (
@@ -18,7 +18,7 @@ CREATE TABLE "Field" (
 );
 
 CREATE TABLE "Class" (
-    "id" smallserial   NOT NULL,
+    "id" serial   NOT NULL,
     "start_year" int   NOT NULL,
     "end_year" int   NOT NULL,
     "field_id" int   NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE "Class" (
 );
 
 CREATE TABLE "Subject" (
-    "id" smallserial   NOT NULL,
+    "id" serial   NOT NULL,
     "name" varchar(64)   NOT NULL,
     "shortcut" char(3)   NOT NULL,
     "code_name" varchar(32),
@@ -47,7 +47,7 @@ create table "SubjectClassType" (
 );
 
 CREATE TABLE "SubjectClass" (
-    "id" smallserial   NOT NULL,
+    "id" serial   NOT NULL,
     "semester_id" int   NOT NULL,
     "subject_id" int   NOT NULL,
     "class" int   NOT NULL,
@@ -61,7 +61,7 @@ CREATE TABLE "SubjectClass" (
 );
 
 CREATE TABLE "SubjectWeek" (
-    "id" smallserial   NOT NULL,
+    "id" serial   NOT NULL,
     "week_number" smallint   NOT NULL,
     "subject_class_id" int   NOT NULL,
     CONSTRAINT "pk_SubjectWeek" PRIMARY KEY (
