@@ -15,11 +15,6 @@ var (
 	semesterCacheMutex sync.RWMutex
 )
 
-type TimetableCache struct {
-	data  map[string]models.WeeklyTimetable
-	mutex sync.RWMutex
-}
-
 var timetableCache = models.TimetableCache{
 	Data: make(map[string]models.WeeklyTimetable),
 }
