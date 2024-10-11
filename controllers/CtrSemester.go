@@ -11,15 +11,9 @@ import (
 )
 
 var (
-	cache      *SemesterCache
+	cache      *models.SemesterCache
 	cacheMutex sync.RWMutex
 )
-
-type SemesterCache struct {
-	Semester *models.Semester
-	Start    time.Time
-	End      time.Time
-}
 
 func GetDbSemester(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
@@ -39,7 +33,7 @@ func GetDbSemester(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cacheMutex.Lock()
-	cache = &SemesterCache{
+	cache = &models.SemesterCache{
 		Semester: semester,
 		Start:    semester.Start,
 		End:      semester.End,
