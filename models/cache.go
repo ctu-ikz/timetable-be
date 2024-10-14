@@ -2,13 +2,11 @@ package models
 
 import (
 	"sync"
-	"time"
 )
 
 type SemesterCache struct {
-	Semester *Semester
-	Start    time.Time
-	End      time.Time
+	Data  map[int]Semester
+	Mutex sync.RWMutex
 }
 
 type TimetableCache struct {

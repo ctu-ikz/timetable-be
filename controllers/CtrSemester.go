@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/ctu-ikz/timetable-be/db"
@@ -12,35 +11,32 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var (
-	cache      *models.SemesterCache
-	cacheMutex sync.RWMutex
-)
-
 func GetSemester(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 
-	cacheMutex.RLock()
-	if cache != nil && currentTime.After(cache.Start) && currentTime.Before(cache.End) {
-		json.NewEncoder(w).Encode(cache.Semester)
-		cacheMutex.RUnlock()
-		return
+	SemesterCache.Mutex.RLock()
+	for _, semester := range SemesterCache.Data {
+		if currentTime.After(semester.Start) && currentTime.Before(semester.End) {
+			json.NewEncoder(w).Encode(semester)
+			SemesterCache.Mutex.RUnlock()
+			return
+		}
 	}
-	cacheMutex.RUnlock()
+	SemesterCache.Mutex.RUnlock()
 
 	semester, err := db.GetSemesterByTime(currentTime)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	cacheMutex.Lock()
-	cache = &models.SemesterCache{
-		Semester: semester,
-		Start:    semester.Start,
-		End:      semester.End,
+	SemesterCache.Mutex.Lock()
+	if semester.ID != nil {
+		SemesterCache.Data[*semester.ID] = *semester
+	} else {
+		http.Error(w, "Semester ID is nil", http.StatusInternalServerError)
 	}
-	cacheMutex.Unlock()
+	SemesterCache.Mutex.Unlock()
 
 	json.NewEncoder(w).Encode(semester)
 }
@@ -56,6 +52,16 @@ func PostSemester(w http.ResponseWriter, r *http.Request) {
 	newSemester, err := db.PostSemester(&semester)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	SemesterCache.Mutex.Lock()
+	if newSemester.ID != nil {
+		SemesterCache.Data[*newSemester.ID] = *newSemester
+		SemesterCache.Mutex.Unlock()
+	} else {
+		http.Error(w, "New Semester ID is nil", http.StatusInternalServerError)
+		SemesterCache.Mutex.Unlock()
 		return
 	}
 
@@ -81,6 +87,10 @@ func DeleteSemester(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	SemesterCache.Mutex.Lock()
+	delete(SemesterCache.Data, id)
+	SemesterCache.Mutex.Unlock()
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -113,6 +123,10 @@ func PutSemester(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	SemesterCache.Mutex.Lock()
+	delete(SemesterCache.Data, id)
+	SemesterCache.Mutex.Unlock()
+
 	json.NewEncoder(w).Encode(semester)
 }
 
@@ -130,11 +144,27 @@ func GetSemesterByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	SemesterCache.Mutex.RLock()
+	if semester, found := SemesterCache.Data[id]; found {
+		SemesterCache.Mutex.RUnlock()
+		json.NewEncoder(w).Encode(semester)
+		return
+	}
+	SemesterCache.Mutex.RUnlock()
+
 	semester, err := db.GetSemesterByID(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	SemesterCache.Mutex.Lock()
+	if semester.ID != nil {
+		SemesterCache.Data[*semester.ID] = *semester
+	} else {
+		http.Error(w, "Semester ID is nil", http.StatusInternalServerError)
+	}
+	SemesterCache.Mutex.Unlock()
 
 	json.NewEncoder(w).Encode(semester)
 }
