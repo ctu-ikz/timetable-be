@@ -22,9 +22,10 @@ func ConnectToDB() (*sql.DB, error) {
 	dbName := os.Getenv("DB_NAME")
 	dbHost := os.Getenv("DB_HOST")
 	dbSSLMode := os.Getenv("DB_SSLMODE")
+	dbPort := os.Getenv("DB_PORT")
 
-	connStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s sslmode=%s",
-		dbUser, dbPassword, dbName, dbHost, dbSSLMode)
+	connStr := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=%s",
+		dbUser, dbPassword, dbName, dbHost, dbPort, dbSSLMode)
 
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
