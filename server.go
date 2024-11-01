@@ -40,6 +40,8 @@ func main() {
 
 	router.HandleFunc("/timetable", controllers.GetThisWeekTimetable).Methods("GET")
 
+	router.HandleFunc("/subjectclass", controllers.GetCurrentSubjectClass).Methods("GET")
+
 	fmt.Println("Server up and running")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
