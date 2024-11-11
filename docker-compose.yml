@@ -9,7 +9,7 @@ services:
     image: nginx:latest
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /etc/letsencrypt:/etc/nginx/ssl:ro  # Update to match the actual path to Let's Encrypt certs
+      - /etc/letsencrypt:/etc/letsencrypt:ro  
     ports:
       - "80:80"
       - "443:443"
