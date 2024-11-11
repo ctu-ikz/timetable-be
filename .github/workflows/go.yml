@@ -53,7 +53,7 @@ jobs:
           SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
           ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
-            cd /timetable-be
+            cd /timetable-be-dev
             git pull origin develop
             docker-compose down
             docker-compose up --build -d
