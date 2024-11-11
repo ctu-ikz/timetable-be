@@ -19,19 +19,18 @@ func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
 	}
 
 	SemesterCache.Mutex.RLock()
-
 	var semester *models.Semester
-
-	SemesterCache.Mutex.RUnlock()
 	for _, semesterL := range SemesterCache.Data {
 		if currentTime.After(semesterL.Start) && currentTime.Before(semesterL.End) {
 			semester = &semesterL
 			break
 		}
 	}
+	SemesterCache.Mutex.RUnlock()
 
 	if semester == nil {
-		semester, err := db.GetSemesterByTime(currentTime)
+		var err error
+		semester, err = db.GetSemesterByTime(currentTime)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -40,39 +39,41 @@ func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "No semester found", http.StatusInternalServerError)
 			return
 		}
+
 		SemesterCache.Mutex.Lock()
 		if semester.ID != nil {
 			SemesterCache.Data[*semester.ID] = *semester
-			SemesterCache.Mutex.Unlock()
-			TimetableCache.Mutex.RLock()
-			if timetable, found := TimetableCache.Data[classID]; found {
-				TimetableCache.Mutex.RUnlock()
-				json.NewEncoder(w).Encode(timetable)
-				return
-			}
-			TimetableCache.Mutex.RUnlock()
-
-			weeksSinceStart := int(currentTime.Sub(semester.Start).Hours()/(24*7)) + 1
-			var semesterID int
-			if semester.ID != nil {
-				semesterID = *semester.ID
-			}
-			timetable, err := db.GetThisWeekTimetable(currentTime, classID, weeksSinceStart, semesterID)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			TimetableCache.Mutex.Lock()
-			TimetableCache.Data[classID] = *timetable
-			TimetableCache.Mutex.Unlock()
-
-			json.NewEncoder(w).Encode(timetable)
-		} else {
-			SemesterCache.Mutex.Unlock()
-			http.Error(w, "Semester ID is nil", http.StatusInternalServerError)
-			return
 		}
+		SemesterCache.Mutex.Unlock()
 	}
 
+	TimetableCache.Mutex.RLock()
+	if timetable, found := TimetableCache.Data[classID]; found {
+		TimetableCache.Mutex.RUnlock()
+		if err := json.NewEncoder(w).Encode(timetable); err != nil {
+			http.Error(w, "Failed to encode timetable", http.StatusInternalServerError)
+		}
+		return
+	}
+	TimetableCache.Mutex.RUnlock()
+
+	weeksSinceStart := int(currentTime.Sub(semester.Start).Hours()/(24*7)) + 1
+	var semesterID int
+	if semester.ID != nil {
+		semesterID = *semester.ID
+	}
+
+	timetable, err := db.GetThisWeekTimetable(currentTime, classID, weeksSinceStart, semesterID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	TimetableCache.Mutex.Lock()
+	TimetableCache.Data[classID] = *timetable
+	TimetableCache.Mutex.Unlock()
+
+	if err := json.NewEncoder(w).Encode(timetable); err != nil {
+		http.Error(w, "Failed to encode timetable", http.StatusInternalServerError)
+	}
 }
