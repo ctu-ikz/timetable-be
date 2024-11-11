@@ -2,7 +2,22 @@ services:
   app:
     build: .
     image: timetable-be
-    ports:
-      - "8080:8080"
     env_file:
       - .env
+  
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/nginx/ssl:ro  # Update to match the actual path to Let's Encrypt certs
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - app
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
