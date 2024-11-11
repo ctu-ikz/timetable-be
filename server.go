@@ -42,7 +42,7 @@ func main() {
 
 	router.HandleFunc("/subjectclass", controllers.GetCurrentSubjectClass).Methods("GET")
 
-	router.HandleFunc("/", controllers.GetIndex).Methods("GET")
+	router.HandleFunc("/", controllers.GetIndex)
 
 	fmt.Println("Server up and running")
 	log.Fatal(http.ListenAndServe(":8080", router))

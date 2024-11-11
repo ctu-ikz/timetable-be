@@ -38,6 +38,6 @@ func ConnectToDB() (*sql.DB, error) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Database connected")
+	fmt.Println("Database connected on " + dbHost)
 	return db, nil
 }
