@@ -5,7 +5,7 @@ import (
 )
 
 type SemesterCache struct {
-	Data  map[int]Semester
+	Data  map[int64]Semester
 	Mutex sync.RWMutex
 }
 

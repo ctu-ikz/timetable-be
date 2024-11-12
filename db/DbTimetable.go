@@ -17,13 +17,6 @@ func GetThisWeekTimetable(time time.Time, class_id string, weeksSinceStart int, 
 											join public."SubjectWeek" sw on sc.id = SW.subject_class_id
 											where se.id = $1 and sc.class_id = $2 and sw.week_number=$3`,
 		semester_id, class_id, weeksSinceStart)
-	fmt.Println(`select sct.name, su.name, su.shortcut, su.code_name, sc.start_time, sc.end_time, sc.day from "SubjectClass" sc
-											join public."Subject" su on sc.subject_id = su.id
-											join public."Semester" se on sc.semester_id = se.id
-											join public."SubjectClassType" sct on sc.type_id = sct.id
-											join public."SubjectWeek" sw on sc.id = SW.subject_class_id
-											where se.id = $1 and sc.class_id = $2 and sw.week_number=$3`,
-		semester_id, class_id, weeksSinceStart)
 
 	if err != nil {
 		return nil, err
@@ -43,7 +36,6 @@ func GetThisWeekTimetable(time time.Time, class_id string, weeksSinceStart int, 
 
 	var WeeklyTimetable models.WeeklyTimetable
 
-	fmt.Println(weeklyDBTimetable)
 	for _, value := range weeklyDBTimetable {
 		valueWithoutDay := value
 		valueWithoutDay.Day = nil

@@ -7,5 +7,5 @@ var TimetableCache = models.TimetableCache{
 }
 
 var SemesterCache = models.SemesterCache{
-	Data: make(map[int]models.Semester),
+	Data: make(map[int64]models.Semester),
 }

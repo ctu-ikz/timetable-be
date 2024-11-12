@@ -76,7 +76,7 @@ func DeleteSemester(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := strconv.Atoi(stringid)
+	id, err := strconv.ParseInt(stringid, 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid id parameter", http.StatusBadRequest)
 		return
@@ -103,7 +103,7 @@ func PutSemester(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := strconv.Atoi(stringid)
+	id, err := strconv.ParseInt(stringid, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -138,7 +138,7 @@ func GetSemesterByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := strconv.Atoi(stringid)
+	id, err := strconv.ParseInt(stringid, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
