@@ -47,9 +47,16 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwt := "tady bude token"
+	jwt, err := helpers.CreateToken(dbUser)
 
-	json.NewEncoder(w).Encode(jwt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Authorization", "Bearer "+jwt)
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func PostUser(w http.ResponseWriter, r *http.Request) {
