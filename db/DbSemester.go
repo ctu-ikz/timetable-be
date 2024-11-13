@@ -62,7 +62,7 @@ func DeleteSemester(id int64) error {
 	}
 
 	if rowsAffected == 0 {
-		return fmt.Errorf("no semester found with id %d", id)
+		return fmt.Errorf("No rows affected with id %d", id)
 	}
 
 	return nil

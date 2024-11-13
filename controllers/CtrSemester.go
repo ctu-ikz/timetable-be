@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -84,6 +85,10 @@ func DeleteSemester(w http.ResponseWriter, r *http.Request) {
 
 	err = db.DeleteSemester(id)
 	if err != nil {
+		if err.Error() == fmt.Sprintf("No rows affected with id %d", id) {
+			http.Error(w, "No semester found with id "+stringid, http.StatusNotFound)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

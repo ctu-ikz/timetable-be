@@ -44,6 +44,10 @@ func main() {
 
 	router.HandleFunc("/", controllers.GetIndex)
 
+	router.HandleFunc("/auth/register", controllers.PostUser).Methods("POST")
+	router.HandleFunc("/auth/user/{id}", controllers.GetUserByID).Methods("GET")
+	router.HandleFunc("/auth/login", controllers.LoginUser).Methods("POST")
+
 	fmt.Println("Server up and running")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
