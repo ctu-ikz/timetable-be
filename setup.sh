@@ -1,5 +1,16 @@
 #!/bin/bash
 
+if ! docker info | grep -q 'Swarm: active'; then
+  echo "Docker Swarm is not initialized. Initializing Swarm..."
+  docker swarm init
+  if [ $? -ne 0 ]; then
+    echo "Error: Failed to initialize Docker Swarm. Please check your Docker setup."
+    exit 1
+  fi
+else
+  echo "Docker Swarm is already initialized."
+fi
+
 if [ ! -d "./secrets" ]; then
   echo "Secrets directory does not exist. Creating it now."
   mkdir ./secrets
@@ -15,7 +26,7 @@ POSTGRES_PASSWORD=$(grep -oP '^DB_PASSWORD=\K.*' .env)
 POSTGRES_DB=$(grep -oP '^DB_NAME=\K.*' .env)
 
 if [ -z "$POSTGRES_USER" ] || [ -z "$POSTGRES_PASSWORD" ] || [ -z "$POSTGRES_DB" ]; then
-  echo "Error: One or more environment variables (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB) are missing in the .env file."
+  echo "Error: One or more environment variables (DB_USER, DB_PASSWORD, DB_NAME) are missing in the .env file."
   exit 1
 fi
 
