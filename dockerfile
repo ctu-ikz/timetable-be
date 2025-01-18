@@ -1,5 +1,5 @@
 # Start with a base image containing the Go runtime
-FROM golang:1.23.3-alpine3.20
+FROM golang:1.23.3-alpine3.20 AS builder
 
 # Create a directory for the application, and set it as the working directory
 WORKDIR /app
@@ -19,13 +19,17 @@ FROM alpine:latest
 WORKDIR /root/
 
 # Copy the binary from the build stage
-COPY --from=0 /app/timetable-be .
+COPY --from=builder /app/timetable-be .
 
 # Copy the .env file if it’s needed in the runtime environment
 COPY .env .
 
+# Add a wait-for-db script to the container
+COPY --from=builder /app/wait-for-db.sh /wait-for-db.sh
+RUN chmod +x /wait-for-db.sh
+
 # Expose the port the application runs on
 EXPOSE 8080
 
-# Run the application by default when the container starts
-CMD ["./timetable-be"]
+# Set the entrypoint to wait for the DB and then start the app
+ENTRYPOINT ["/wait-for-db.sh", "./timetable-be"]
