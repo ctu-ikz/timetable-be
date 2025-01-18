@@ -32,6 +32,9 @@ if [ ! -d "./secrets" ]; then
   mkdir ./secrets
 fi
 
+# Remove existing Docker secrets
+docker secret rm postgres_user postgres_password postgres_db
+
 echo "$POSTGRES_USER" > ./secrets/postgres_user.txt
 echo "$POSTGRES_PASSWORD" > ./secrets/postgres_password.txt
 echo "$POSTGRES_DB" > ./secrets/postgres_db.txt
