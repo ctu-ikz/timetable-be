@@ -58,7 +58,7 @@ func GetThisWeekTimetable(w http.ResponseWriter, r *http.Request) {
 	TimetableCache.Mutex.RUnlock()
 
 	weeksSinceStart := int(currentTime.Sub(semester.Start).Hours()/(24*7)) + 1
-	var semesterID int64
+	var semesterID int
 	if semester.ID != nil {
 		semesterID = *semester.ID
 	}

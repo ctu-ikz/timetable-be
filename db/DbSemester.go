@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ctu-ikz/timetable-be/helpers"
 	"github.com/ctu-ikz/timetable-be/models"
 )
 
@@ -30,16 +29,9 @@ func GetSemesterByTime(time time.Time) (*models.Semester, error) {
 func PostSemester(semester *models.Semester) (*models.Semester, error) {
 	fmt.Println("DB semester put")
 
-	id, err := helpers.GenerateSnowflakeID()
-	if err != nil {
-		return nil, err
-	}
-
-	semester.ID = &id
-
-	_, err = db.Exec(`INSERT INTO "Semester" ("id", "codename", "start", "end")
-					VALUES ($1, $2, $3, $4);`,
-		semester.ID, semester.Codename, semester.Start, semester.End)
+	_, err := db.Exec(`INSERT INTO "Semester" ( "codename", "start", "end")
+					VALUES ($1, $2, $3, );`,
+		semester.Codename, semester.Start, semester.End)
 
 	if err != nil {
 		return nil, err
@@ -48,7 +40,7 @@ func PostSemester(semester *models.Semester) (*models.Semester, error) {
 	return semester, nil
 }
 
-func DeleteSemester(id int64) error {
+func DeleteSemester(id int) error {
 	fmt.Println("DB semester delete")
 
 	result, err := db.Exec(`DELETE FROM "Semester" WHERE id = $1;`, id)
@@ -68,7 +60,7 @@ func DeleteSemester(id int64) error {
 	return nil
 }
 
-func PutSemester(id int64, semester *models.Semester) error {
+func PutSemester(id int, semester *models.Semester) error {
 	result, err := db.Exec(`UPDATE "Semester" SET "codename" = $1, "end" = $2, "start" = $3 WHERE id = $4`, semester.Codename, semester.End, semester.Start, id)
 	if err != nil {
 		return err
@@ -86,7 +78,7 @@ func PutSemester(id int64, semester *models.Semester) error {
 	return nil
 }
 
-func GetSemesterByID(id int64) (*models.Semester, error) {
+func GetSemesterByID(id int) (*models.Semester, error) {
 	fmt.Println("DB semester get")
 	var semester models.Semester
 	err := db.QueryRow(`SELECT id,start,"end",codename FROM "Semester" WHERE id = $1`, id).Scan(&semester.ID, &semester.Start, &semester.End, &semester.Codename)

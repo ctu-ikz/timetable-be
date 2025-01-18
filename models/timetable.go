@@ -6,7 +6,7 @@ import (
 )
 
 type Semester struct {
-	ID       *int64    `json:"id,omitempty"`
+	ID       *int      `json:"id,omitempty"`
 	Start    time.Time `json:"start"`
 	End      time.Time `json:"end"`
 	Codename string    `json:"codename"`
@@ -37,7 +37,7 @@ func (s *Semester) UnmarshalJSON(data []byte) error {
 	}
 
 	if aux.ID != nil {
-		id := int64(*aux.ID)
+		id := int(*aux.ID)
 		s.ID = &id
 	} else {
 		s.ID = nil
