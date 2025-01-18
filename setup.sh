@@ -19,9 +19,9 @@ if [ -z "$POSTGRES_USER" ] || [ -z "$POSTGRES_PASSWORD" ] || [ -z "$POSTGRES_DB"
   exit 1
 fi
 
-echo "$POSTGRES_USER" > ./secrets/postgres_user.txt
-echo "$POSTGRES_PASSWORD" > ./secrets/postgres_password.txt
-echo "$POSTGRES_DB" > ./secrets/postgres_db.txt
+echo "$DB_USER" > ./secrets/postgres_user.txt
+echo "$DB_PASSWORD" > ./secrets/postgres_password.txt 
+echo "$DB_NAME" > ./secrets/postgres_db.txt
 
 echo "Creating Docker secrets..."
 docker secret create postgres_user ./secrets/postgres_user.txt
