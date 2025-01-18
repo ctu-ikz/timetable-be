@@ -32,6 +32,11 @@ if [ ! -d "./secrets" ]; then
   mkdir ./secrets
 fi
 
+# Clean up the secrets files
+rm ./secrets/postgres_user.txt
+rm ./secrets/postgres_password.txt
+rm ./secrets/postgres_db.txt
+
 # Remove existing Docker secrets
 docker secret rm postgres_user postgres_password postgres_db
 
@@ -44,10 +49,6 @@ docker secret create postgres_user ./secrets/postgres_user.txt
 docker secret create postgres_password ./secrets/postgres_password.txt
 docker secret create postgres_db ./secrets/postgres_db.txt
 
-# Clean up the secrets files after creating Docker secrets
-rm ./secrets/postgres_user.txt
-rm ./secrets/postgres_password.txt
-rm ./secrets/postgres_db.txt
 
 # Stop and rebuild the containers
 echo "Stopping existing containers..."
