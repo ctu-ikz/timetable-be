@@ -10,18 +10,18 @@ if [ ! -f ".env" ]; then
   exit 1
 fi
 
-POSTGRES_USER=$(grep -oP '^POSTGRES_USER=\K.*' .env)
-POSTGRES_PASSWORD=$(grep -oP '^POSTGRES_PASSWORD=\K.*' .env)
-POSTGRES_DB=$(grep -oP '^POSTGRES_DB=\K.*' .env)
+POSTGRES_USER=$(grep -oP '^DB_USER=\K.*' .env)
+POSTGRES_PASSWORD=$(grep -oP '^DB_PASSWORD=\K.*' .env)
+POSTGRES_DB=$(grep -oP '^DB_NAME=\K.*' .env)
 
 if [ -z "$POSTGRES_USER" ] || [ -z "$POSTGRES_PASSWORD" ] || [ -z "$POSTGRES_DB" ]; then
   echo "Error: One or more environment variables (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB) are missing in the .env file."
   exit 1
 fi
 
-echo "$DB_USER" > ./secrets/postgres_user.txt
-echo "$DB_PASSWORD" > ./secrets/postgres_password.txt 
-echo "$DB_NAME" > ./secrets/postgres_db.txt
+echo "$POSTGRES_USER" > ./secrets/postgres_user.txt
+echo "$POSTGRES_PASSWORD" > ./secrets/postgres_password.txt
+echo "$POSTGRES_DB" > ./secrets/postgres_db.txt
 
 echo "Creating Docker secrets..."
 docker secret create postgres_user ./secrets/postgres_user.txt
