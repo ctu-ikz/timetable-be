@@ -11,6 +11,9 @@ RUN go mod download
 # Copy the entire project
 COPY . .
 
+# Make sure to copy the migrations directory
+COPY migrations /app/migrations
+
 # Build the Go application
 RUN go build -o timetable-be server.go
 
@@ -24,11 +27,12 @@ COPY --from=builder /app/timetable-be .
 # Copy the .env file if it’s needed in the runtime environment
 COPY .env .
 
+# Add the migrations directory to the final image
+COPY --from=builder /app/migrations /migrations
+
 # Add a wait-for-db script to the container
 COPY --from=builder /app/wait-for-db.sh /wait-for-db.sh
 RUN chmod +x /wait-for-db.sh
-
-COPY ./migrations /migrations
 
 # Expose the port the application runs on
 EXPOSE 8080
