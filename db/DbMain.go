@@ -50,7 +50,7 @@ func applyMigrations() error {
 	}
 
 	migrateInstance, err := migrate.NewWithDatabaseInstance(
-		"file://migrations",
+		"file:///migrations",
 		"postgres", driver)
 
 	if err != nil {
