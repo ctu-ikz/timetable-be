@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -37,20 +36,19 @@ func applyMigrations() error {
 		return fmt.Errorf("could not create db instance: %v", err)
 	}
 
-	migrationsDir := "/migrations"
-	fmt.Println("Migrations directory: ", migrationsDir)
+	migrationsDir := ""
 
-	files, err := ioutil.ReadDir(migrationsDir)
-	if err != nil {
-		return fmt.Errorf("could not read migrations directory: %v", err)
-	}
+	os.Getenv("RUNNING_FROM_DOCKER")
 
-	for _, file := range files {
-		fmt.Println(file.Name())
+	runnedFromDocker := os.Getenv("RUNNING_FROM_DOCKER")
+	if runnedFromDocker == "true" {
+		migrationsDir = "/migrations"
+	} else {
+		migrationsDir = "migrations"
 	}
 
 	migrateInstance, err := migrate.NewWithDatabaseInstance(
-		"file:///migrations",
+		"file://"+migrationsDir,
 		"postgres", driver)
 
 	if err != nil {
