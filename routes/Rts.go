@@ -8,9 +8,6 @@ import (
 )
 
 func StartRoutes(router *mux.Router) {
-	StartSemesterRoutes(router)
-	StartTimetableRoutes(router)
-	StartSubjectClassRoutes(router)
 	StartAuthRoutes(router)
 	router.HandleFunc("/", controllers.GetIndex).Methods("GET")
 	router.Handle("/ping", JWTAuthMiddleware(http.HandlerFunc(Ping))).Methods("GET")

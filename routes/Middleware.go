@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -17,9 +16,10 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		tokenString := strings.TrimSpace(strings.Replace(authorizationHeader, "Bearer", "", 1))
-		err := helpers.VerifyToken(tokenString)
+
+		err := helpers.VerifyToken(tokenString, false)
 		if err != nil {
-			http.Error(w, fmt.Errorf("Invalid token").Error(), http.StatusUnauthorized)
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 

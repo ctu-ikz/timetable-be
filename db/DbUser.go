@@ -8,7 +8,7 @@ import (
 	"github.com/ctu-ikz/timetable-be/models"
 )
 
-func PostUser(user *models.User) (*models.User, error) {
+func PostUser(user *models.UserDB) (*models.UserDB, error) {
 	if user.Password == nil || *user.Password == "" {
 		return nil, errors.New("Password cannot be nil or empty")
 	}
@@ -27,7 +27,7 @@ func PostUser(user *models.User) (*models.User, error) {
 
 	user.Password = &hash
 
-	_, err = db.Exec(`INSERT INTO "User" ("id", "username", "password")
+	_, err = db.Exec(`INSERT INTO "users" ("id", "username", "password")
 					VALUES ($1, $2, $3);`,
 		user.ID, user.Username, user.Password)
 
@@ -40,9 +40,9 @@ func PostUser(user *models.User) (*models.User, error) {
 	return user, nil
 }
 
-func GetUserByID(id int64) (*models.User, error) {
-	var user models.User
-	err := db.QueryRow(`SELECT id,username FROM "User" WHERE id = $1`, id).Scan(&user.ID, &user.Username)
+func GetUserByID(id int64) (*models.UserDB, error) {
+	var user models.UserDB
+	err := db.QueryRow(`SELECT id,username FROM "users" WHERE id = $1`, id).Scan(&user.ID, &user.Username)
 
 	if err != nil {
 		return nil, err
@@ -51,9 +51,10 @@ func GetUserByID(id int64) (*models.User, error) {
 	return &user, nil
 }
 
-func GetUserByUsername(username string) (*models.User, error) {
-	var user models.User
-	err := db.QueryRow(`SELECT id,username, password FROM "User" WHERE username = $1`, username).Scan(&user.ID, &user.Username, &user.Password)
+func GetUserByUsername(username string) (*models.UserDB, error) {
+	var user models.UserDB
+	err := db.QueryRow(`SELECT id, username, password FROM "users" WHERE username = $1`, username).
+		Scan(&user.ID, &user.Username, &user.Password)
 
 	if err != nil {
 		return nil, err
@@ -63,8 +64,8 @@ func GetUserByUsername(username string) (*models.User, error) {
 }
 
 func UserNameTaken(username string) (bool, error) {
-	var user models.User
-	err := db.QueryRow(`SELECT id,username FROM "User" WHERE username = $1`, username).Scan(&user.ID, &user.Username)
+	var user models.UserDB
+	err := db.QueryRow(`SELECT id,username FROM "users" WHERE username = $1`, username).Scan(&user.ID, &user.Username)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

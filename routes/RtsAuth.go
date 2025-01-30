@@ -9,4 +9,5 @@ func StartAuthRoutes(router *mux.Router) {
 	router.HandleFunc("/auth/register", controllers.PostUser).Methods("POST")
 	router.HandleFunc("/auth/user/{id}", controllers.GetUserByID).Methods("GET")
 	router.HandleFunc("/auth/login", controllers.LoginUser).Methods("POST")
+	router.HandleFunc("/auth/refresh", controllers.RefreshTokens).Methods("POST")
 }

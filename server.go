@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,27 +8,15 @@ import (
 	"github.com/ctu-ikz/timetable-be/db"
 	"github.com/ctu-ikz/timetable-be/routes"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
 
-var database *sql.DB
-
 func main() {
-
-	var err error
-
-	database, err = db.ConnectToDB()
-
+	err := db.Init()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error initializing database: %v", err)
 	}
-	defer database.Close()
 
-	err = godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	defer db.GetDB().Close()
 
 	router := mux.NewRouter()
 	routes.StartRoutes(router)
