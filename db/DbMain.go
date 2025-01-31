@@ -41,7 +41,7 @@ func applyMigrations() error {
 	os.Getenv("RUNNING_FROM_DOCKER")
 
 	runnedFromDocker := os.Getenv("RUNNING_FROM_DOCKER")
-	if runnedFromDocker == "truex" {
+	if runnedFromDocker == "true" {
 		migrationsDir = "/migrations"
 	} else {
 		migrationsDir = "migrations"
