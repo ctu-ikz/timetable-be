@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ctu-ikz/timetable-be/controllers"
 	"github.com/ctu-ikz/timetable-be/db"
-	"github.com/ctu-ikz/timetable-be/routes"
 	"github.com/gorilla/mux"
 )
 
@@ -19,7 +19,7 @@ func main() {
 	defer db.GetDB().Close()
 
 	router := mux.NewRouter()
-	routes.StartRoutes(router)
+	controllers.StartRoutes(router)
 
 	fmt.Println("Server up and running")
 	log.Fatal(http.ListenAndServe(":8080", router))

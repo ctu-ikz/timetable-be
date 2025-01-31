@@ -1,15 +1,15 @@
-package routes
+package controllers
 
 import (
 	"net/http"
 
-	"github.com/ctu-ikz/timetable-be/controllers"
+	"github.com/ctu-ikz/timetable-be/services"
 	"github.com/gorilla/mux"
 )
 
 func StartRoutes(router *mux.Router) {
 	StartAuthRoutes(router)
-	router.HandleFunc("/", controllers.GetIndex).Methods("GET")
+	router.HandleFunc("/", services.GetIndex).Methods("GET")
 	router.Handle("/ping", JWTAuthMiddleware(http.HandlerFunc(Ping))).Methods("GET")
 }
 
