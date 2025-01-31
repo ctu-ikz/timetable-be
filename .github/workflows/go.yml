@@ -62,8 +62,9 @@ jobs:
             ./setup.sh
 
             # Check if any Docker containers have exited
-            if docker ps -a --filter 'status=exited' --format '{{.Names}}'; then
+            if [ "$(docker ps -a --filter 'status=exited' --format '{{.Names}}' | wc -l)" -ne 0 ]; then
               echo "Deployment failed: Some Docker containers have exited."
               exit 1
             fi
+            
           EOF
