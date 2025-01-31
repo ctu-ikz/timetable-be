@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ctu-ikz/timetable-be/db"
@@ -51,7 +50,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, err := helpers.CreateTokens(dbUser)
+	accessToken, refreshToken, accessTokenExpiry, err := helpers.CreateTokensWithExpiry(dbUser)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -69,9 +68,19 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens := map[string]string{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(time.Duration(refreshTokenSeconds) * time.Second),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/auth/refresh",
+	})
+
+	tokens := map[string]interface{}{
+		"access_token": accessToken,
+		"expiry_date":  accessTokenExpiry,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -131,13 +140,13 @@ func GetUserByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func RefreshTokens(w http.ResponseWriter, r *http.Request) {
-	authorizationHeader := r.Header.Get("Authorization")
-	if authorizationHeader == "" {
-		http.Error(w, "Missing Authorization Header", http.StatusUnauthorized)
+	existingCookie, err := r.Cookie("refresh_token")
+	if err != nil {
+		http.Error(w, "Missing or invalid refresh token cookie", http.StatusUnauthorized)
 		return
 	}
 
-	refreshTokenString := strings.TrimSpace(strings.Replace(authorizationHeader, "Bearer ", "", 1))
+	refreshTokenString := existingCookie.Value
 
 	if err := helpers.VerifyToken(refreshTokenString, true); err != nil {
 		http.Error(w, "Invalid refresh token", http.StatusUnauthorized)
@@ -175,25 +184,71 @@ func RefreshTokens(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newAccessToken, newRefreshToken, err := helpers.CreateTokens(user)
+	newAccessToken, newRefreshToken, accessTokenExpiry, err := helpers.CreateTokensWithExpiry(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	hashedRefreshToken := HashToken(newRefreshToken)
+	hashedRefreshTokenNew := HashToken(newRefreshToken)
 
-	if err := db.CreateRefreshToken(userID64, hashedRefreshToken, time.Now().Add(7*24*time.Hour)); err != nil {
+	refreshTokenSeconds, err := strconv.Atoi(os.Getenv("REFRESH_TOKEN_EXPIRY"))
+	if err != nil {
+		http.Error(w, "Invalid refresh token expiry duration", http.StatusInternalServerError)
+		return
+	}
+	if err := db.CreateRefreshToken(userID64, hashedRefreshTokenNew, time.Now().Add(time.Duration(refreshTokenSeconds)*time.Second)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	tokens := map[string]string{
-		"access_token":  newAccessToken,
-		"refresh_token": newRefreshToken,
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		Path:     "/auth/refresh",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    newRefreshToken,
+		Expires:  time.Now().Add(time.Duration(refreshTokenSeconds) * time.Second),
+		Path:     "/auth/refresh",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	tokens := map[string]interface{}{
+		"access_token": newAccessToken,
+		"expiry_date":  accessTokenExpiry,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(tokens)
+}
+
+func LogoutUser(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("refresh_token")
+	if err == nil {
+		hashedRefreshToken := HashToken(cookie.Value)
+		db.InvalidateRefreshToken(hashedRefreshToken)
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		Path:     "/auth/refresh",
+	})
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Logged out successfully"})
 }

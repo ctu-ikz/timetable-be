@@ -13,7 +13,7 @@ import (
 
 func init() {
 	if err := godotenv.Load(".env"); err != nil {
-		fmt.Println("Error loading .en file")
+		fmt.Println("Error loading .env file")
 	}
 }
 
@@ -37,9 +37,9 @@ func CheckPassword(password string, hash string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
-func CreateTokens(user *models.UserDB) (string, string, error) {
+func CreateTokensWithExpiry(user *models.UserDB) (string, string, time.Time, error) {
 	if user.ID == nil {
-		return "", "", fmt.Errorf("user ID cannot be nil")
+		return "", "", time.Time{}, fmt.Errorf("user ID cannot be nil")
 	}
 
 	accessTokenExpiry := parseDuration(os.Getenv("ACCESS_TOKEN_EXPIRY"))
@@ -60,15 +60,15 @@ func CreateTokens(user *models.UserDB) (string, string, error) {
 
 	accessTokenString, err := accessToken.SignedString([]byte(accessSecret))
 	if err != nil {
-		return "", "", err
+		return "", "", time.Time{}, err
 	}
 
 	refreshTokenString, err := refreshToken.SignedString([]byte(refreshSecret))
 	if err != nil {
-		return "", "", err
+		return "", "", time.Time{}, err
 	}
 
-	return accessTokenString, refreshTokenString, nil
+	return accessTokenString, refreshTokenString, time.Now().Add(accessTokenExpiry), nil
 }
 
 func VerifyToken(tokenString string, isRefresh bool) error {
