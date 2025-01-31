@@ -53,10 +53,17 @@ jobs:
           SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
           ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << 'EOF'
+            set -e
             cd timetable-be
             git reset --hard HEAD
             git pull origin develop
             chmod +x ./setup.sh
 
             ./setup.sh
+
+            # Check if any Docker containers have exited
+            if docker ps -a --filter 'status=exited' --format '{{.Names}}'; then
+              echo "Deployment failed: Some Docker containers have exited."
+              exit 1
+            fi
           EOF
