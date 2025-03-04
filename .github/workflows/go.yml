@@ -13,15 +13,18 @@ on:
           - warning
           - debug
   push:
-    branches: ["develop"]
+    branches:
+      - develop
   pull_request:
-    branches: ["develop"]
+    branches:
+      - develop
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -39,7 +42,7 @@ jobs:
     if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up SSH
@@ -58,13 +61,15 @@ jobs:
             git reset --hard HEAD
             git pull origin develop
             chmod +x ./setup.sh
-
             ./setup.sh
 
-            # Check if any Docker containers have exited
-            if [ "$(docker ps -a --filter 'status=exited' --format '{{.Names}}' | wc -l)" -ne 0 ]; then
-              echo "Deployment failed: Some Docker containers have exited."
-              exit 1
-            fi
-            
+            required_containers=("nginx-timetable" "db_ssh_timetable" "timetable-be-app-1" "db-timetable")
+            for container in "${required_containers[@]}"; do
+              status=$(docker inspect --format='{{.State.Status}}' "$container" 2>/dev/null || echo "not_found")
+              if [ "$status" != "running" ]; then
+                echo "Deployment failed: Container '$container' status is '$status'."
+                exit 1
+              fi
+            done
+            echo "Deployment succeeded: All required containers are running."
           EOF
