@@ -41,6 +41,20 @@ services:
     networks:
       - default
 
+  db_ssh:
+    build:
+      context: .
+      dockerfile: dockerfile.ssh
+    container_name: db_ssh_timetable
+    ports:
+      - "2222:22"  
+    depends_on:
+      - db
+    networks:
+      - default
+    secrets:
+      - ssh_root_password
+
 networks:
   default:
     driver: bridge
@@ -56,3 +70,5 @@ secrets:
     file: ./secrets/postgres_password.txt
   postgres_db:
     file: ./secrets/postgres_db.txt
+  ssh_root_password:
+    file: ./secrets/ssh_root_password.txt
